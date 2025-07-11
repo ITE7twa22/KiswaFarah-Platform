@@ -34,25 +34,31 @@
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    table {
+    table th, table td {
       font-size: 14px;
+      vertical-align: middle;
+      white-space: normal !important;
+      word-wrap: break-word;
+      text-align: center;
+    }
+    th {
+      background-color: #f1f1f1;
+      font-weight: bold;
     }
     select {
       border-radius: 12px;
     }
     .custom-filter-btn {
-  background-color: #61B2B3;
-  color: white;
-  border: none;
-  font-weight: bold;
-  border-radius: 12px;
-  padding: 10px 20px;
-}
-
-.custom-filter-btn:hover {
-  background-color: #4c999a;
-}
-
+      background-color: #61B2B3;
+      color: white;
+      border: none;
+      font-weight: bold;
+      border-radius: 12px;
+      padding: 10px 20px;
+    }
+    .custom-filter-btn:hover {
+      background-color: #4c999a;
+    }
   </style>
 </head>
 <body>
@@ -98,7 +104,7 @@
     </div>
   </form>
 
-  <div class="table-container table-responsive">
+  <div class="table-container">
     <table class="table table-striped table-bordered align-middle">
       <thead class="table-light text-center">
         <tr>
@@ -106,12 +112,12 @@
           <th>رقم الجوال</th>
           <th>اسم القائدة</th>
           <th>الركن</th>
-          <th>Q1</th>
-          <th>Q2</th>
-          <th>Q3</th>
-          <th>Q4</th>
-          <th>Q5</th>
-          <th>Q6</th>
+          <th>حسن التعامل، وتقديم المساعدة عند الحاجة.</th>
+          <th>الالتزام بالحضور والتواجد في الأوقات المحددة بالركن.</th>
+          <th>القدرة على العمل الجماعي وحل المشاكل بشكل فعال.</th>
+          <th>مستوى المعرفة بالمهام المسندة لهم واستجابة المتطوعين للتوجيهات.</th>
+          <th>الالتزام بميثاق الأخلاقي.</th>
+          <th>لدى المتطوع صفات قيادية؟</th>
           <th>ملاحظات</th>
           <th>التاريخ</th>
         </tr>
@@ -123,12 +129,12 @@
           <td>{{ row.volunteer_phone }}</td>
           <td>{{ row.leader_name }}</td>
           <td>{{ row.section_name }}</td>
-          <td class="text-center">{{ row.q1 }}</td>
-          <td class="text-center">{{ row.q2 }}</td>
-          <td class="text-center">{{ row.q3 }}</td>
-          <td class="text-center">{{ row.q4 }}</td>
-          <td class="text-center">{{ row.q5 }}</td>
-          <td class="text-center">{{ row.q6 }}</td>
+          <td>{{ row.q1 }}</td>
+          <td>{{ row.q2 }}</td>
+          <td>{{ row.q3 }}</td>
+          <td>{{ row.q4 }}</td>
+          <td>{{ row.q5 }}</td>
+          <td>{{ row.q6 }}</td>
           <td>{{ row.comments or "—" }}</td>
           <td>{{ row.created_at }}</td>
         </tr>
