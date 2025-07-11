@@ -163,7 +163,7 @@ def dashboard():
     # حساب الأيام المتبقية
     today = date.today()
     remaining_days_campaign = (campaign_end - today).days if campaign_end else None
-    remaining_days_exhibition = (campaign_end - today).days if exhibition_end else None
+    remaining_days_exhibition = (exhibition_end - today).days if exhibition_end else None
 
 
 
