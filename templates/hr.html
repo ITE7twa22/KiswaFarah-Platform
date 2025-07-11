@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة HR | كسوة فرح</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      padding: 30px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .header h2 {
+      color: #61B2B3;
+      font-weight: 700;
+    }
+    .stats-box {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+    .btn-section {
+      background-color: #61B2B3;
+      color: white;
+    }
+    .btn-section:hover {
+      background-color: #519ea0;
+    }
+  </style>
+</head>
+<body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
+  <!-- Header -->
+  <div class="header">
+    <h2>حياكم الله 🤝</h2>
+    <img src="/static/images/Logo.png" style="height: 120px;" alt="شعار كسوة فرح">
+  </div>
+
+  {% if latest_campaign %}
+  <div class="alert alert-info text-center">
+    آخر حملة مُسجلة: من <strong>{{ latest_campaign.campaign_start_date }}</strong>
+    إلى <strong>{{ latest_campaign.campaign_end_date }}</strong>، والمعرض من
+    <strong>{{ latest_campaign.exhibition_start_date }}</strong>
+    إلى <strong>{{ latest_campaign.exhibition_end_date }}</strong>.
+  </div>
+  {% endif %}
+
+
+  <!-- اختيار الركن -->
+  <div class="stats-box">
+    <form method="get" action="">
+        <div class="d-flex align-items-center gap-2">
+            <div class="flex-grow-1">
+            <label for="section" class="form-label mb-1">اختيار الركن:</label>
+            <select class="form-select" id="section" name="section" required>
+                <option disabled selected>-- اختاري الركن --</option>
+                {% for sec in all_sections %}
+                <option value="{{ sec.id }}" {% if selected_section and selected_section.id == sec.id %}selected{% endif %}>{{ sec.name }}</option>
+                {% endfor %}
+            </select>
+            </div>
+            <div>
+            <button type="submit" class="btn btn-section mt-4">عرض</button>
+            </div>
+        </div>
+    </form>
+  </div>
+
+  {% if not selected_section %}
+    <!-- واجهة ترحيبية -->
+    <div class="text-center p-5 stats-box">
+      <h3 style="color: #61B2B3;">🎯 لوحة متابعة الأركان</h3>
+      <p class="lead">اختاري الركن لمراقبة حالة الحضور أو اطلعي على نظرة عامة بالأرقام 👇</p>
+    </div>
+
+    <!-- إحصائيات شاملة -->
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+            <div class="stats-box text-center">
+                <h6>📌 عدد الأركان</h6>
+                <p class="fs-4 fw-bold">{{ all_sections|length }}</p>
+            </div>
+            </div>
+            <div class="col-md-6">
+            <div class="stats-box text-center">
+                <h6>📋 عدد اللجان المسجلة</h6>
+                <p class="fs-4 fw-bold">{{ committee_leader_count  }}</p>
+            </div>
+            </div>
+        </div>
+    </div>
+
+  <!-- تحميل التقارير -->
+<div class="stats-box text-center">
+  <h5 class="mb-3">📥 تحميل التقارير</h5>
+  <div class="d-flex justify-content-center gap-3 flex-wrap">
+    <a href="{{ url_for('download_attendance_report') }}" class="btn btn-section">
+      🧾 تحميل تحضير المتطوعات
+    </a>
+    <a href="{{ url_for('download_transfer_requests') }}" class="btn btn-section">
+      🔁 تحميل طلبات النقل
+    </a>
+    <a href="{{ url_for('download_exhibition_candidates') }}" class="btn btn-section">
+      🏅 تحميل ترشيح المعرض
+    </a>
+
+  </div>
+  <div class="form-text mt-2 text-muted">تشمل التحضير اليومي لكل المتطوعات وطلبات التنقل بين الأركان.</div>
+</div>
+
+<div class="stats-box mt-5">
+  <h5 class="mb-3">📤 رفع ملف المتطوعات</h5>
+  <form method="POST" action="{{ url_for('upload_volunteers_excel') }}" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">اختيار ملف Excel (name,	phone,	section): </label>
+      <input type="file" name="file" accept=".xlsx" class="form-control" required>
+      <div class="form-text text-muted mt-1">تأكد من ترتيب الأعمدة وانها باللغة الانجليزية</div>
+    </div>
+    <div class="text-end">
+      <button type="submit" class="btn btn-section">⬆️ رفع وإدخال البيانات</button>
+    </div>
+  </form>
+</div>
+
+
+<div class="stats-box mt-5">
+  <h5 class="mb-3">🧩 إدارة الأركان</h5>
+
+  <!-- نموذج إضافة ركن -->
+  <form method="POST" action="{{ url_for('add_section') }}" class="mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label">اسم الركن:</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">الحد الأدنى:</label>
+        <input type="number" name="min" class="form-control" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">الحد الأقصى:</label>
+        <input type="number" name="max" class="form-control" required>
+      </div>
+      <div class="col-md-4 text-end">
+        <button type="submit" class="btn btn-section">➕ إضافة ركن</button>
+        
+      </div>
+        <div class="form-text text-muted mt-1">عند حذف ركن سيحذف قائد هذا الركن لذلك انتبه </div>
+    </div>
+  </form>
+
+  <!-- عرض الأركان -->
+  <table class="table table-bordered text-center">
+    <thead class="table-light">
+      <tr>
+        <th>الاسم</th>
+        <th>الحد الأدنى</th>
+        <th>الحد الأقصى</th>
+        <th>إجراء</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sec in all_sections %}
+      <tr>
+        <td>{{ sec.name }}</td>
+        <td>{{ sec.min }}</td>
+        <td>{{ sec.max }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_section') }}">
+            <input type="hidden" name="section_id" value="{{ sec.id }}">
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا الركن وجميع القادة المرتبطين به؟')">🗑️ حذف</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+  <div class="stats-box">
+    <h5 class="mb-3">➕ إضافة قائد ركن</h5>
+    <form method="POST" action="{{ url_for('add_leader') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">الكود:</label>
+          <input type="number" name="id" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">اسم القائد:</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">رقم الجوال:</label>
+          <input type="text" name="phone" class="form-control" required>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">اختر الركن:</label>
+          <select name="section_id" class="form-select" required>
+            <option disabled selected>-- اختاري الركن --</option>
+            {% for sec in all_sections %}
+              <option value="{{ sec.id }}">{{ sec.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="text-end mt-3">
+        <button type="submit" class="btn btn-section">➕ إضافة</button>
+      </div>
+    </form>
+  </div>
+
+
+  <div class="stats-box">
+    <h5 class="mb-3">➕ إضافة قائد قسم</h5>
+    <form method="POST" action="{{ url_for('add_department_leader') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">الكود:</label>
+          <input type="number" name="id" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">اسم القائد:</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">رقم الجوال:</label>
+          <input type="text" name="phone" class="form-control" required>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label d-block mb-2">اختر الأركان التابعة له:</label>
+          <div class="row g-2">
+            {% for sec in all_sections %}
+            <div class="col-md-4 col-sm-6">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="section_ids" value="{{ sec.id }}" id="sec_{{ sec.id }}">
+                <label class="form-check-label" for="sec_{{ sec.id }}">{{ sec.name }}</label>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="form-text text-muted mt-1">يمكنك اختيار أكثر من ركن بكل سهولة.</div>
+        </div>
+      </div>
+      <div class="text-end mt-3">
+        <button type="submit" class="btn btn-section">➕ إضافة</button>
+      </div>
+    </form>
+  </div>
+
+
+
+  <div class="stats-box">
+    <h5 class="mb-3">➕ إضافة قائد لجنة</h5>
+    <form method="POST" action="{{ url_for('add_committee_leader') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">الكود:</label>
+          <input type="number" name="id" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">اسم القائد:</label>
+          <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">رقم الجوال:</label>
+          <input type="text" name="phone" class="form-control" required>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">اسم اللجنة:</label>
+          <input type="text" name="committee_section" class="form-control" required>
+          <div class="form-text text-muted">⚠️ يرجى كتابة اسم اللجنة بدقة وبدون أخطاء أو نسيان الهمزات واكتبيها إبتداء بـ  لجنة ال...</div>
+        </div>
+      </div>
+      <div class="text-end mt-3">
+        <button type="submit" class="btn btn-section">➕ إضافة</button>
+      </div>
+    </form>
+  </div>
+
+
+
+  {% else %}
+    <!-- عرض بيانات الركن المختار -->
+    <div class="stats-box">
+      <h4 class="mb-3">📍 بيانات الركن: {{ selected_section.name }}</h4>
+
+      <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="ابحث عن اسم المتطوع..." onkeyup="filterTable()" />
+      </div>
+
+      <div class="table-responsive">
+        <table id="volunteerTable" class="table table-sm table-striped text-center align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>الاسم</th>
+              <th>رقم الجوال</th>
+              <th>أيام الحضور</th>
+              <th>نسبة الحضور</th>
+              <th>حضر اليوم؟</th>
+              <th>مرشح للمعرض؟</th>
+              <th>ملاحظات</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in section_data %}
+            <tr style="font-size: 13px;">
+              <td>{{ row.name }}</td>
+              <td>{{ row.phone }}</td>
+              <td>{{ row.attendance_days }}</td>
+              <td>{{ row.attendance_percentage }}</td>
+              <td>{{ row.present_today }}</td>
+              <td>{{ row.candidate }}</td>
+              <td>{{ row.notes }}</td>
+              <!-- داخل tbody من الجدول -->
+              <td>
+                <button class="btn btn-sm btn-outline-warning btn-note"
+                        data-volunteer="{{ row.id }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#noteModal">
+                  ✍️
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if not selected_section %}
+  <script>
+    const ctx = document.getElementById("hrChart").getContext("2d");
+    const chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: {{ hr_chart_labels | safe }},
+        datasets: [{
+          label: "عدد الحاضرات",
+          data: {{ hr_chart_data | safe }},
+          backgroundColor: "#61B2B3"
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            stepSize: 1
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  </script>
+  {% endif %}
+
+  <script>
+    function filterTable() {
+      const input = document.getElementById("searchInput");
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById("volunteerTable");
+      const tr = table.getElementsByTagName("tr");
+
+      for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+          const txtValue = td.textContent || td.innerText;
+          tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+        }
+      }
+    }
+  </script>
+
+  <!-- Modal -->
+  <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('send_note') }}?section={{ selected_section.id }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">✍️ إرسال ملاحظة للقادة</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="volunteer_id" id="noteVolunteerId">
+
+            <div class="mb-3">
+              <label for="noteText" class="form-label">الملاحظة:</label>
+              <textarea name="note" id="noteText" class="form-control" rows="4" required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">اختر القادة المستلمين:</label>
+              <div class="d-grid gap-2 mb-2">
+                <button type="button" class="btn btn-outline-secondary" onclick="selectAllLeaders(true)">📤 إرسال للجميع</button>
+              </div>
+              <div class="row g-2">
+                {% for leader in section_leaders %}
+                <div class="col-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="leaders" value="{{ leader.id }}" id="leader_{{ leader.id }}">
+                    <label class="form-check-label" for="leader_{{ leader.id }}">{{ leader.name }}</label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              <div class="form-text mt-1 text-muted">يمكنك اختيار قائد أو أكثر، أو إرسال الملاحظة للجميع.</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-section">إرسال</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+<!-- إدخال تواريخ الحملة والمعرض -->
+<div class="stats-box">
+  <h5 class="mb-3">📅 إدخال التواريخ الأساسية</h5>
+  <form method="POST" action="{{ url_for('set_campaign_dates') }}">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="campaign_start" class="form-label">تاريخ بداية الحملة:</label>
+        <input type="date" id="campaign_start" name="campaign_start_date" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label for="campaign_end" class="form-label">تاريخ نهاية الحملة:</label>
+        <input type="date" id="campaign_end" name="campaign_end_date" class="form-control" required>
+      </div>
+
+      <div class="col-md-6">
+        <label for="exhibition_start" class="form-label">تاريخ بداية المعرض:</label>
+        <input type="date" id="exhibition_start" name="exhibition_start_date" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label for="exhibition_end" class="form-label">تاريخ نهاية المعرض:</label>
+        <input type="date" id="exhibition_end" name="exhibition_end_date" class="form-control" required>
+      </div>
+    </div>
+    <div class="mt-3 text-end">
+      <button type="submit" class="btn btn-section">💾 حفظ التواريخ</button>
+    </div>
+    <div class="form-text mt-2 text-muted">سيتم حفظ التواريخ لاستخدامها لاحقًا في الجدولة والتحليلات.</div>
+  </form>
+</div>
+
+
+
+
+
+<!-- JavaScript -->
+<script>
+  const noteButtons = document.querySelectorAll(".btn-note");
+  const noteVolunteerIdInput = document.getElementById("noteVolunteerId");
+
+  noteButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const volunteerId = btn.getAttribute("data-volunteer");
+      noteVolunteerIdInput.value = volunteerId;
+      console.log("🎯 volunteerId =", volunteerId); // للتأكد
+    });
+  });
+</script>
+
+<script>
+  function selectAllLeaders(checked) {
+    const checkboxes = document.querySelectorAll('input[name="leaders"]');
+    checkboxes.forEach(cb => cb.checked = checked);
+  }
+</script>
+
+
+
+
+
+</body>
+</html>

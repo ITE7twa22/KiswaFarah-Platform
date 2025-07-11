@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقييم متطوعي الميدان | كسوة فرح</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      padding: 30px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .header h2 {
+      color: #61B2B3;
+      font-weight: 700;
+    }
+    .filter-box {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .table-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    table {
+      font-size: 14px;
+    }
+    select {
+      border-radius: 12px;
+    }
+    .custom-filter-btn {
+  background-color: #61B2B3;
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 12px;
+  padding: 10px 20px;
+}
+
+.custom-filter-btn:hover {
+  background-color: #4c999a;
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>🧍‍♀️ تقييم متطوعي الميدان</h2>
+    <img src="/static/images/Logo.png" alt="شعار كسوة فرح" style="height: 100px;">
+  </div>
+
+  <form method="GET" class="filter-box row g-3">
+    <div class="col-md-4">
+      <label class="form-label">اختر الركن</label>
+      <select name="section_id" class="form-select">
+        <option value="">كل الأركان</option>
+        {% for section in sections %}
+        <option value="{{ section.id }}" {% if selected_section == section.id %}selected{% endif %}>{{ section.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">اختر السؤال</label>
+      <select name="question" class="form-select">
+        <option value="">كل الأسئلة</option>
+        {% for i in range(1,7) %}
+        <option value="q{{i}}" {% if selected_question == ('q' ~ i) %}selected{% endif %}>السؤال {{ i }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">قيمة الإجابة</label>
+      <select name="answer" class="form-select">
+        <option value="">كل القيم</option>
+        {% for i in range(1,6) %}
+        <option value="{{i}}" {% if selected_answer == i %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 text-end">
+      <button type="submit" class="btn custom-filter-btn">🔍 تصفية النتائج</button>
+    </div>
+  </form>
+
+  <div class="table-container table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+      <thead class="table-light text-center">
+        <tr>
+          <th>اسم المتطوعة</th>
+          <th>رقم الجوال</th>
+          <th>اسم القائدة</th>
+          <th>الركن</th>
+          <th>Q1</th>
+          <th>Q2</th>
+          <th>Q3</th>
+          <th>Q4</th>
+          <th>Q5</th>
+          <th>Q6</th>
+          <th>ملاحظات</th>
+          <th>التاريخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in evaluations %}
+        <tr>
+          <td>{{ row.volunteer_name }}</td>
+          <td>{{ row.volunteer_phone }}</td>
+          <td>{{ row.leader_name }}</td>
+          <td>{{ row.section_name }}</td>
+          <td class="text-center">{{ row.q1 }}</td>
+          <td class="text-center">{{ row.q2 }}</td>
+          <td class="text-center">{{ row.q3 }}</td>
+          <td class="text-center">{{ row.q4 }}</td>
+          <td class="text-center">{{ row.q5 }}</td>
+          <td class="text-center">{{ row.q6 }}</td>
+          <td>{{ row.comments or "—" }}</td>
+          <td>{{ row.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

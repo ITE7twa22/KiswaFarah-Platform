@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طلب نقل متطوع | كسوة فرح</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      padding: 30px;
+    }
+    .form-box {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+    }
+    h3 {
+      color: #61B2B3;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .btn-custom {
+      background-color: #61B2B3;
+      color: white;
+      border: none;
+    }
+    .btn-custom:hover {
+      background-color: #519ea0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-box">
+    <h3>طلب نقل متطوع</h3>
+    <form method="POST" action="{{ url_for('submit_transfer') }}">
+      <div class="mb-3">
+        <label class="form-label">اسم القائد</label>
+        <input type="text" class="form-control" value="{{ session['username'] }}" readonly name="leader_name">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">من الركن</label>
+        <input type="text" class="form-control" value="{{ from_section }}" readonly name="from_section">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">اسم المتطوع</label>
+        <input type="text" class="form-control" value="{{ volunteer_name }}" readonly name="volunteer_name">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">رقم جوال المتطوع</label>
+        <input type="text" class="form-control" value="{{ volunteer_phone }}" readonly name="volunteer_phone">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">اختر الركن المرغوب</label>
+        <select class="form-select" name="to_section" required>
+          <option disabled selected>-- اختاري الركن --</option>
+          {% for sec in all_sections %}
+            {% if sec != from_section %}
+              <option value="{{ sec }}">{{ sec }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">ملاحظات (اختياري)</label>
+        <textarea class="form-control" name="notes" rows="3" placeholder="اكتبي أي ملاحظات إن وجدت"></textarea>
+      </div>
+
+      <div class="text-end">
+        <button type="submit" class="btn btn-custom">إرسال الطلب</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">رجوع</a>
+      </div>
+    </form>
+  </div>
+
+</body>
+</html>
