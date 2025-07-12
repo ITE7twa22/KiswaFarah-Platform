@@ -118,7 +118,7 @@
   <!-- تحميل التقارير -->
 <div class="stats-box text-center">
   <h5 class="mb-3">📥 تحميل التقارير</h5>
-  <div class="d-flex justify-content-center gap-3 flex-wrap">
+   <div class="d-flex justify-content-center gap-3 flex-wrap">
     <a href="{{ url_for('download_attendance_report') }}" class="btn btn-section">
       🧾 تحميل تحضير المتطوعات
     </a>
@@ -128,7 +128,9 @@
     <a href="{{ url_for('download_exhibition_candidates') }}" class="btn btn-section">
       🏅 تحميل ترشيح المعرض
     </a>
-
+    <a href="{{ url_for('download_notes_report') }}" class="btn btn-section">
+    📝 تحميل الملاحظات
+      </a>
   </div>
   <div class="form-text mt-2 text-muted">تشمل التحضير اليومي لكل المتطوعات وطلبات التنقل بين الأركان.</div>
 </div>
