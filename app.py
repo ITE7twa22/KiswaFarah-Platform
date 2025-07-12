@@ -6,6 +6,8 @@ from io import BytesIO
 from openpyxl import Workbook
 import pandas as pd
 import io
+import secrets
+
 
 
 
@@ -397,15 +399,13 @@ def send_note():
 
     if not (volunteer_id and note_text and section_id):
         flash("⚠️ تأكد من تعبئة جميع الحقول.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         volunteer_id = int(volunteer_id)
         section_id = int(section_id)
     except ValueError:
         flash("⚠️ بيانات غير صالحة.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     if not selected_leaders:
         cursor.execute("SELECT id FROM Leader WHERE section_id = %s", (section_id,))
         leaders = cursor.fetchall()
@@ -590,10 +590,7 @@ def process_transfer():
 from datetime import datetime
 from flask import request, redirect, url_for, flash, session, render_template
 
-@app.route("/hr")
-def hr_dashboard():
-    if "username" not in session:
-        return redirect(url_for("login"))
+def render_hr_dashboard_content():
     
     cursor.execute("SELECT * FROM CampaignDates ORDER BY created_at DESC LIMIT 1")
     latest_campaign = cursor.fetchone()
@@ -1044,8 +1041,7 @@ def set_campaign_dates():
         db.rollback()
         flash(f"⚠️ حدث خطأ أثناء الحفظ: {str(e)}", "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
+    return render_hr_dashboard_content()
 
 @app.route("/evaluate_volunteer", methods=["GET", "POST"])
 def evaluate_volunteer():
@@ -1313,8 +1309,9 @@ def add_committee_volunteer():
     flash("✅ تم إضافة المتطوعة بنجاح.", "success")
     return redirect(url_for("committee_dashboard"))
 
-@app.route("/quality_dashboard")
-def quality_dashboard():
+def render_quality_dashboard_content():
+    if "admin_role" not in session or session["admin_role"] != "quality":
+        return redirect(url_for("admin_login"))
     return render_template("quality_dashboard.html")
 
 @app.route("/quality_field")
@@ -1702,8 +1699,7 @@ def add_leader():
 
     if not (leader_id and name and phone and section_id):
         flash("⚠️ تأكد من تعبئة جميع الحقول لقائد الركن، بما في ذلك المعرف (ID).", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         cursor.execute("""
             INSERT INTO Leader (id, name, phone, section_id)
@@ -1715,8 +1711,7 @@ def add_leader():
         db.rollback()
         flash("❌ حدث خطأ أثناء إضافة قائد الركن: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
+    return render_hr_dashboard_content()
 
 
 @app.route("/add_department_leader", methods=["POST"])
@@ -1728,8 +1723,7 @@ def add_department_leader():
 
     if not (dept_leader_id and name and phone and section_ids):
         flash("⚠️ تأكد من تعبئة جميع الحقول لقائد القسم وتحديد الأركان.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         cursor.execute("""
             INSERT INTO departmentleader (id, name, phone)
@@ -1749,8 +1743,7 @@ def add_department_leader():
         db.rollback()
         flash("❌ حدث خطأ أثناء إضافة قائد القسم: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
+    return render_hr_dashboard_content()
 
 @app.route("/add_committee_leader", methods=["POST"])
 def add_committee_leader():
@@ -1761,8 +1754,7 @@ def add_committee_leader():
 
     if not (leader_id and name and phone and committee_section):
         flash("⚠️ تأكد من تعبئة جميع الحقول لقائد اللجنة، بما في ذلك المعرف (ID).", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         cursor.execute("""
             INSERT INTO committeeleader (id, name, phone, committee_section, created_at)
@@ -1774,7 +1766,8 @@ def add_committee_leader():
         db.rollback()
         flash("❌ حدث خطأ أثناء إضافة قائد اللجنة: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
+    return render_hr_dashboard_content()
+
 @app.route("/add_section", methods=["POST"])
 def add_section():
     name = request.form.get("name", "").strip()
@@ -1783,8 +1776,7 @@ def add_section():
 
     if not (name and min_val and max_val):
         flash("⚠️ تأكد من تعبئة جميع الحقول لإضافة الركن.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         cursor.execute("""
             INSERT INTO section (name, min, max)
@@ -1796,8 +1788,7 @@ def add_section():
         db.rollback()
         flash("❌ حدث خطأ أثناء الإضافة: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
+    return render_hr_dashboard_content()
 @app.route("/delete_section", methods=["POST"])
 def delete_section():
     section_id = request.form.get("section_id")
@@ -1816,8 +1807,7 @@ def delete_section():
         db.rollback()
         flash("❌ حدث خطأ أثناء الحذف: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
+    return render_hr_dashboard_content()
 
 @app.route("/download_exhibition_candidates")
 def download_exhibition_candidates():
@@ -1830,8 +1820,7 @@ def download_exhibition_candidates():
     campaign = cursor.fetchone()
     if not campaign:
         flash("⚠️ لم يتم تحديد تواريخ الحملة بعد.", "warning")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     start_date = campaign["campaign_start_date"]
     end_date = campaign["campaign_end_date"]
     total_days = (end_date - start_date).days + 1
@@ -1905,13 +1894,11 @@ def download_exhibition_candidates():
 def upload_volunteers_excel():
     if "file" not in request.files:
         flash("⚠️ لم يتم تحميل ملف.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     file = request.files["file"]
     if file.filename == "":
         flash("⚠️ اسم الملف فارغ.", "danger")
-        return redirect(url_for("hr_dashboard"))
-
+        return render_hr_dashboard_content()
     try:
         df = pd.read_excel(file)
 
@@ -1919,8 +1906,7 @@ def upload_volunteers_excel():
         expected_columns = {"name", "phone", "section"}
         if not expected_columns.issubset(df.columns.str.lower()):
             flash("⚠️ يجب أن يحتوي الملف على أعمدة: name, phone, section", "danger")
-            return redirect(url_for("hr_dashboard"))
-
+            return render_hr_dashboard_content()
         # تأكيد الحقول بصيغة مناسبة
         df.columns = [col.strip().lower() for col in df.columns]
 
@@ -1955,10 +1941,7 @@ def upload_volunteers_excel():
         db.rollback()
         flash("❌ حدث خطأ أثناء قراءة الملف: " + str(e), "danger")
 
-    return redirect(url_for("hr_dashboard"))
-
-
-
+    return render_hr_dashboard_content()
 
 @app.route("/download_notes_report")
 def download_notes_report():
@@ -2000,6 +1983,69 @@ def download_notes_report():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+@app.route("/admin_login", methods=["GET", "POST"])
+def admin_login():
+    error = None
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        code = request.form["code"].strip()
+
+        cursor.execute("SELECT * FROM admin_users WHERE username=%s AND code=%s", (username, code))
+        user = cursor.fetchone()
+
+        if user:
+            session["admin_username"] = username
+            session["admin_role"] = user["role"]
+
+            # التوجيه إلى الرابط المشفر الخاص به
+            return redirect(f"/dashboard/{user['access_token']}")
+
+        else:
+            error = "⚠️ اسم المستخدم أو الكود غير صحيح."
+
+    return render_template("admin_login.html", error=error)
+
+@app.route("/dashboard/<token>")
+def secure_dashboard(token):
+    cursor.execute("SELECT * FROM admin_users WHERE access_token = %s", (token,))
+    user = cursor.fetchone()
+
+    if not user:
+        return "غير مصرح", 403
+
+    session["admin_username"] = user["username"]
+    session["admin_role"] = user["role"]
+
+    if user["role"] == "resources":
+        return render_hr_dashboard_content()    
+    elif user["role"] == "quality":
+            return render_quality_dashboard_content()
+    else:
+        return "دور غير معروف", 403
+
+
+
+@app.route("/manage_admins/06f1d6e94a", methods=["GET", "POST"])
+def manage_admins():
+    if "admin_username" not in session or session.get("admin_role") != "resources":
+        return redirect(url_for("admin_login"))
+    
+    access_token = secrets.token_hex(16)  # يولّد توكن عشوائي مكون من 32 حرف
+
+
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        code = request.form["code"].strip()
+        role = request.form["role"]
+
+        cursor.execute("INSERT INTO admin_users (username, code, role, access_token) VALUES (%s, %s, %s, %s)",
+               (username, code, role, access_token))
+        db.commit()
+        flash("✅ تم إضافة المستخدم بنجاح!", "success")
+
+    cursor.execute("SELECT * FROM admin_users ORDER BY created_at DESC")
+    admins = cursor.fetchall()
+    return render_template("manage_admins.html", admins=admins)
 
 
 
