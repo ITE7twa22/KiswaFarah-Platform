@@ -1959,6 +1959,50 @@ def upload_volunteers_excel():
 
 
 
+
+@app.route("/download_notes_report")
+def download_notes_report():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "الملاحظات"
+
+    # رأس الجدول
+    ws.append(["اسم المتطوعة", "رقم الجوال", "اسم القائد", "الملاحظة", "التاريخ"])
+
+    # استعلام البيانات
+    cursor.execute("""
+        SELECT 
+            v.name AS volunteer_name,
+            v.phone AS volunteer_phone,
+            COALESCE(l.name, dl.name) AS leader_name,
+            n.note,
+            n.created_at
+        FROM notes n
+        JOIN volunteer v ON n.volunteer_id = v.id
+        LEFT JOIN leader l ON n.leader_id = l.id
+        LEFT JOIN departmentleader dl ON n.leader_id = dl.id
+        ORDER BY n.created_at DESC
+    """)
+    notes_data = cursor.fetchall()
+
+    for row in notes_data:
+        ws.append(list(row.values()))
+
+    # حفظ الملف في الذاكرة
+    file_stream = BytesIO()
+    wb.save(file_stream)
+    file_stream.seek(0)
+
+    return send_file(
+        file_stream,
+        as_attachment=True,
+        download_name="ملاحظات_المتطوعات.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+
+
 # =============================
 # تشغيل التطبيق
 # =============================
